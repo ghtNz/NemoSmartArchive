@@ -14,7 +14,7 @@ from src.models.archive import (
 )
 
 from src.models.errors import ExtractionError
-
+from src.ui.notify import notify
 
 class ExtractionService:
     """Handle archive extraction workflow."""
@@ -48,6 +48,11 @@ class ExtractionService:
                 output,
             )
 
+            notify(
+                "NemoSmartArchive",
+                f"Extraction completed:\n{output}",
+            )
+
             return ExtractionResult(
                 status=ExtractionStatus.SUCCESS,
                 output=output,
@@ -55,6 +60,11 @@ class ExtractionService:
 
         except ExtractionError as error:
 
+            notify(
+                "NemoSmartArchive",
+                str(error),
+            )
+            
             return ExtractionResult(
                 status=ExtractionStatus.FAILED,
                 output=output,
