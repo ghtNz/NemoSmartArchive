@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+import subprocess
 
 from .base import ArchiveBackend
 
@@ -23,7 +24,18 @@ class SevenZipBackend(ArchiveBackend):
         return self._binary is not None
 
     def version(self) -> str:
-        raise NotImplementedError
+        """Return installed 7-Zip version."""
+
+        result = subprocess.run(
+            [
+                self.binary,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        return result.stdout.strip()
 
     def list(self, archive: Path):
         raise NotImplementedError
