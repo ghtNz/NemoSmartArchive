@@ -1,47 +1,39 @@
-from gi.repository import GObject, Nemo, Gtk
+"""
+NemoSmartArchive application bridge.
+"""
+
+from pathlib import Path
+
+from src.backends.sevenzip import SevenZipBackend
+from src.engine.archive_engine import ArchiveEngine
+from src.services.extraction_service import ExtractionService
 
 
-class SmartArchiveExtension(GObject.GObject, Nemo.MenuProvider):
-    def get_file_items(self, files):
-        if len(files) != 1:
-            return
+def extract_smart(
+    file_path: Path,
+):
+    """
+    Smart extraction entry point.
+    """
 
-        file = files[0]
+    backend = SevenZipBackend()
 
-        if file.is_directory():
-            return
+    archive_info = backend.list(
+        file_path
+    )
 
-        uri = file.get_uri().lower()
+    engine = ArchiveEngine()
 
-        supported = (
-            ".zip",
-            ".7z",
-            ".rar",
-            ".tar",
-            ".gz",
-            ".bz2",
-            ".xz",
-        )
+    decision = engine.analyze(
+        archive_info
+    )
 
-        if not uri.endswith(supported):
-            return
+    service = ExtractionService(
+        backend
+    )
 
-        item = Nemo.MenuItem(
-            name="NemoSmartArchive::ExtractSmart",
-            label="⭐ Extract Here (Smart)",
-            tip="Extract archive intelligently",
-        )
-
-        item.connect("activate", self.menu_activate_cb, file)
-
-        return [item]
-
-    def menu_activate_cb(self, menu, file):
-        dialog = Gtk.MessageDialog(
-            text="Nemo Smart Archive",
-            secondary_text="The extension is working!",
-            buttons=Gtk.ButtonsType.OK,
-        )
-
-        dialog.run()
-        dialog.destroy()
+    return service.extract(
+        file_path,
+        file_path.parent,
+        decision,
+    )
