@@ -1,6 +1,24 @@
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
-*.log
+
+# Virtual environments
+.venv/
+venv/
+
+# Test & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDEs
 .vscode/
 .idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
