@@ -1,33 +1,64 @@
-from pathlib import Path
+"""
+Smart archive decision engine.
+"""
 
+from __future__ import annotations
+
+from src.models.archive import (
+    ArchiveInfo,
+    ExtractDecision,
+)
 
 class ArchiveEngine:
-    """Archive operations."""
+    """Analyze archive structure."""
 
-    SUPPORTED_EXTENSIONS = {
-        ".zip",
-        ".7z",
-        ".rar",
-        ".tar",
-        ".gz",
-        ".bz2",
-        ".xz",
-    }
+    def analyze(
+        self,
+        archive: ArchiveInfo,
+    ) -> ExtractDecision:
+        """
+        Decide extraction behavior.
+        """
 
-    @classmethod
-    def is_supported(cls, path: str) -> bool:
-        suffixes = Path(path).suffixes
+        top_level = self._top_level_items(
+            archive
+        )
 
-        if not suffixes:
-            return False
+        if len(top_level) == 1:
+            item = top_level[0]
 
-        full = "".join(suffixes).lower()
+            if item.is_directory:
+                return ExtractDecision.EXTRACT_HERE
 
-        if full in (
-            ".tar.gz",
-            ".tar.bz2",
-            ".tar.xz",
-        ):
-            return True
+        return ExtractDecision.CREATE_FOLDER
 
-        return suffixes[-1].lower() in cls.SUPPORTED_EXTENSIONS
+    def _top_level_items(
+        self,
+        archive: ArchiveInfo,
+    ):
+        """
+        Return unique top-level entries.
+        """
+
+        result = {}
+
+        for entry in archive.entries:
+
+            parts = entry.name.split("/")
+
+            if len(parts) == 1:
+                name = parts[0]
+
+                result[name] = entry
+
+            else:
+                name = parts[0]
+
+                result[name] = type(
+                    entry
+                )(
+                    name=name + "/",
+                    is_directory=True,
+                )
+
+        return list(result.values())
