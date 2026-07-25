@@ -6,7 +6,7 @@ import subprocess
 
 from .base import ArchiveBackend
 from src.models.archive import ArchiveEntry, ArchiveInfo
-
+from src.models.errors import ExtractionError
 
 class SevenZipBackend(ArchiveBackend):
     """7-Zip backend."""
@@ -100,7 +100,50 @@ class SevenZipBackend(ArchiveBackend):
         archive: Path,
         destination: Path,
     ) -> None:
-        raise NotImplementedError
+        """Extract archive to destination."""
+
+        destination.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        try:
+            result = subprocess.run(
+                [
+                    self.binary,
+                    "x",
+                    str(archive),
+                    f"-o{destination}",
+                    "-y",
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+
+        except subprocess.CalledProcessError as error:
+
+            message = (
+                error.stdout +
+                error.stderr
+            ).lower()
+
+            if (
+                "password" in message
+                or "encrypted" in message
+            ):
+                from src.models.errors import (
+                    PasswordRequiredError,
+                )
+
+                raise PasswordRequiredError(
+                    "Archive password required"
+                ) from error
+
+            raise ExtractionError(
+                error.stderr.strip()
+                or "Unknown extraction error"
+            ) from error
 
     def test(self, archive: Path) -> bool:
         raise NotImplementedError

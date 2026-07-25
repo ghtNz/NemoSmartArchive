@@ -14,6 +14,12 @@ class ExtractDecision(Enum):
     EXTRACT_HERE = "extract_here"
     CREATE_FOLDER = "create_folder"
 
+class ExtractionStatus(Enum):
+    """Extraction result state."""
+
+    SUCCESS = "success"
+    FAILED = "failed"
+
 @dataclass(frozen=True)
 class ArchiveEntry:
     """Single archive item."""
@@ -27,3 +33,11 @@ class ArchiveInfo:
 
     path: Path
     entries: list[ArchiveEntry]
+
+@dataclass(frozen=True)
+class ExtractionResult:
+    """Result returned after extraction."""
+
+    status: ExtractionStatus
+    output: Path
+    error: str | None = None
