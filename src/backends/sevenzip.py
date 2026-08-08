@@ -164,4 +164,17 @@ class SevenZipBackend(ArchiveBackend):
             ) from error
 
     def test(self, archive: Path) -> bool:
-        raise NotImplementedError
+        """Test archive integrity using 7-Zip."""
+
+        result = subprocess.run(
+            [
+                self.binary,
+                "t",
+                str(archive),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        return result.returncode == 0

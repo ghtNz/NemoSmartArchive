@@ -42,6 +42,20 @@ class ExtractionService:
             output = destination
 
         try:
+            
+            if not self.backend.test(archive):
+                message = "Archive integrity check failed."
+
+                notify(
+                    "NemoSmartArchive",
+                    message,
+                )
+
+                return ExtractionResult(
+                    status=ExtractionStatus.FAILED,
+                    output=output,
+                    error=message,
+                )
 
             self.backend.extract(
                 archive,

@@ -54,3 +54,21 @@ def test_unsupported_extension():
         assert not SevenZipBackend.is_supported(
             Path(filename)
         )
+
+def test_archive_integrity():
+    backend = SevenZipBackend()
+
+    result = backend.test(
+        Path("tests/data/loose_files.zip")
+    )
+
+    assert result is True
+
+def test_corrupt_archive_integrity():
+    backend = SevenZipBackend()
+
+    result = backend.test(
+        Path("tests/data/corrupt.zip")
+    )
+
+    assert result is False
