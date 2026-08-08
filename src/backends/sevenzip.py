@@ -6,7 +6,10 @@ import subprocess
 
 from .base import ArchiveBackend
 from src.models.archive import ArchiveEntry, ArchiveInfo
-from src.models.errors import ExtractionError
+from src.models.errors import (
+    ArchiveReadError,
+    ExtractionError,
+)
 
 class SevenZipBackend(ArchiveBackend):
     """7-Zip backend."""
@@ -59,19 +62,49 @@ class SevenZipBackend(ArchiveBackend):
     def list(self, archive: Path) -> ArchiveInfo:
         """List archive contents."""
 
-        result = subprocess.run(
-            [
-                self.binary,
-                "l",
-                "-slt",
-                str(archive),
-            ],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        try:
+            result = subprocess.run(
+                [
+                    self.binary,
+                    "l",
+                    "-slt",
+                    str(archive),
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
 
-        entries = self._parse_listing(result.stdout)
+        except subprocess.CalledProcessError as error:
+            output = (
+                error.stderr.strip()
+                or error.stdout.strip()
+            )
+
+            message = "Unable to read archive."
+
+            lines = output.splitlines()
+
+            for index, line in enumerate(lines):
+                line = line.strip()
+
+                if line == "ERRORS:":
+                    for next_line in lines[index + 1:]:
+                        next_line = next_line.strip()
+
+                        if next_line:
+                            message = next_line
+                            break
+
+                    break
+
+            raise ArchiveReadError(
+                message
+            ) from error
+
+        entries = self._parse_listing(
+            result.stdout
+        )
 
         return ArchiveInfo(
             path=archive,
