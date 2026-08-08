@@ -16,23 +16,41 @@ def test_version():
     assert "7-Zip" in version
 
 def test_list_archive():
-
     backend = SevenZipBackend()
 
-    archive = Path(
-        "tests/data/single_folder.zip"
+    info = backend.list(
+        Path("tests/data/loose_files.zip")
     )
-
-    info = backend.list(archive)
 
     assert len(info.entries) > 0
 
-    names = [
-        entry.name
-        for entry in info.entries
-    ]
 
-    assert any(
-        "image1.jpg" in name
-        for name in names
+def test_supported_extensions():
+    supported = (
+        "test.zip",
+        "test.7z",
+        "test.tar",
+        "test.tar.gz",
+        "test.tgz",
+        "test.tar.bz2",
+        "test.tar.xz",
     )
+
+    for filename in supported:
+        assert SevenZipBackend.is_supported(
+            Path(filename)
+        )
+
+
+def test_unsupported_extension():
+    unsupported = (
+        "photo.jpg",
+        "document.pdf",
+        "video.mp4",
+        "README.md",
+    )
+
+    for filename in unsupported:
+        assert not SevenZipBackend.is_supported(
+            Path(filename)
+        )

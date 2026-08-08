@@ -31,6 +31,7 @@ sys.path.insert(
 )
 
 from src.extension import extract_smart
+from src.backends.sevenzip import SevenZipBackend
 
 
 class NemoSmartArchiveExtension(
@@ -66,19 +67,7 @@ class NemoSmartArchiveExtension(
 
         path = Path(file_path)
 
-        supported_extensions = (
-            ".zip",
-            ".7z",
-            ".tar",
-            ".tar.gz",
-            ".tgz",
-            ".tar.bz2",
-            ".tar.xz",
-        )
-
-        if not path.name.lower().endswith(
-            supported_extensions
-        ):
+        if not SevenZipBackend.is_supported(path):
             return
 
         menu_item = Nemo.MenuItem(
@@ -112,9 +101,7 @@ class NemoSmartArchiveExtension(
             path = Path(file_path)
 
             try:
-                result = extract_smart(path)
-
-                print(result)
+                extract_smart(path)
 
             except Exception as error:
                 print(

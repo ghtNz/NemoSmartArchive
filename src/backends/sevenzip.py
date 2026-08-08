@@ -11,6 +11,24 @@ from src.models.errors import ExtractionError
 class SevenZipBackend(ArchiveBackend):
     """7-Zip backend."""
 
+    SUPPORTED_EXTENSIONS = (
+        ".zip",
+        ".7z",
+        ".tar",
+        ".tar.gz",
+        ".tgz",
+        ".tar.bz2",
+        ".tar.xz",
+    )
+
+    @classmethod
+    def is_supported(cls, archive: Path) -> bool:
+        """Return True when the filename uses a supported archive format."""
+
+        return archive.name.lower().endswith(
+            cls.SUPPORTED_EXTENSIONS
+        )
+
     def __init__(self) -> None:
         self._binary = shutil.which("7zz") or shutil.which("7z")
 
