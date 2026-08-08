@@ -1,5 +1,8 @@
-from src.backends.sevenzip import SevenZipBackend
+import pytest
+
 from pathlib import Path
+from src.backends.sevenzip import SevenZipBackend
+from src.models.errors import PasswordRequiredError
 
 
 def test_backend_exists():
@@ -72,3 +75,15 @@ def test_corrupt_archive_integrity():
     )
 
     assert result is False
+
+def test_password_protected_archive():
+    backend = SevenZipBackend()
+
+    with pytest.raises(
+        PasswordRequiredError,
+        match="Archive password required",
+    ):
+        backend.extract(
+            Path("tests/data/password.zip"),
+            Path("/tmp/nemosmartarchive-password-test"),
+        )

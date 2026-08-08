@@ -9,6 +9,7 @@ from src.models.archive import ArchiveEntry, ArchiveInfo
 from src.models.errors import (
     ArchiveReadError,
     ExtractionError,
+    PasswordRequiredError,
 )
 
 class SevenZipBackend(ArchiveBackend):
@@ -203,6 +204,7 @@ class SevenZipBackend(ArchiveBackend):
             [
                 self.binary,
                 "t",
+                "-p",
                 str(archive),
             ],
             capture_output=True,
@@ -210,4 +212,20 @@ class SevenZipBackend(ArchiveBackend):
             check=False,
         )
 
-        return result.returncode == 0
+        if result.returncode == 0:
+            return True
+
+        message = (
+            result.stderr.strip()
+            or result.stdout.strip()
+        ).lower()
+
+        if (
+            "password" in message
+            or "encrypted" in message
+        ):
+            raise PasswordRequiredError(
+                "Archive password required"
+            )
+
+        return False

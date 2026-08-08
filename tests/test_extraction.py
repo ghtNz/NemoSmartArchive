@@ -44,3 +44,19 @@ def test_corrupt_archive_is_rejected(tmp_path):
 
     assert result.status == ExtractionStatus.FAILED
     assert result.error == "Archive integrity check failed."
+
+def test_password_protected_archive_is_rejected(tmp_path):
+    archive = Path(
+        "tests/data/password.zip"
+    )
+
+    service = ExtractionService()
+
+    result = service.extract(
+        archive,
+        tmp_path,
+        ExtractDecision.EXTRACT_HERE,
+    )
+
+    assert result.status == ExtractionStatus.FAILED
+    assert result.error == "Archive password required"
