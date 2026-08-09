@@ -5,8 +5,9 @@ Abstract interface for archive backends.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from src.models.archive import ArchiveInfo
 from pathlib import Path
+
+from src.models.archive import ArchiveInfo
 
 
 class ArchiveBackend(ABC):

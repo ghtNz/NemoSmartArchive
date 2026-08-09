@@ -1,13 +1,13 @@
+from pathlib import Path
+
 import pytest
 
-from pathlib import Path
 from src.backends.sevenzip import SevenZipBackend
 from src.models.errors import (
     ArchiveReadError,
-    ExtractionError,
+    BackendUnavailableError,
     PasswordRequiredError,
     UnsupportedArchiveError,
-    BackendUnavailableError,
 )
 
 
@@ -15,6 +15,7 @@ def test_backend_exists():
     backend = SevenZipBackend()
 
     assert backend.is_available()
+
 
 def test_version():
     backend = SevenZipBackend()
@@ -24,12 +25,11 @@ def test_version():
     assert len(version) > 0
     assert "7-Zip" in version
 
+
 def test_list_archive():
     backend = SevenZipBackend()
 
-    info = backend.list(
-        Path("tests/data/loose_files.zip")
-    )
+    info = backend.list(Path("tests/data/loose_files.zip"))
 
     assert len(info.entries) > 0
 
@@ -46,9 +46,7 @@ def test_supported_extensions():
     )
 
     for filename in supported:
-        assert SevenZipBackend.is_supported(
-            Path(filename)
-        )
+        assert SevenZipBackend.is_supported(Path(filename))
 
 
 def test_unsupported_extension():
@@ -60,27 +58,24 @@ def test_unsupported_extension():
     )
 
     for filename in unsupported:
-        assert not SevenZipBackend.is_supported(
-            Path(filename)
-        )
+        assert not SevenZipBackend.is_supported(Path(filename))
+
 
 def test_archive_integrity():
     backend = SevenZipBackend()
 
-    result = backend.test(
-        Path("tests/data/loose_files.zip")
-    )
+    result = backend.test(Path("tests/data/loose_files.zip"))
 
     assert result is True
+
 
 def test_corrupt_archive_integrity():
     backend = SevenZipBackend()
 
-    result = backend.test(
-        Path("tests/data/corrupt.zip")
-    )
+    result = backend.test(Path("tests/data/corrupt.zip"))
 
     assert result is False
+
 
 def test_password_protected_archive():
     backend = SevenZipBackend()
@@ -94,13 +89,13 @@ def test_password_protected_archive():
             Path("/tmp/nemosmartarchive-password-test"),
         )
 
+
 def test_unsupported_archive_is_rejected():
     backend = SevenZipBackend()
 
     with pytest.raises(UnsupportedArchiveError):
-        backend.list(
-            Path("tests/data/photo.jpg")
-        )
+        backend.list(Path("tests/data/photo.jpg"))
+
 
 def test_unsupported_archive_extract_is_rejected(
     tmp_path,
@@ -113,13 +108,13 @@ def test_unsupported_archive_extract_is_rejected(
             tmp_path,
         )
 
+
 def test_missing_archive_is_rejected():
     backend = SevenZipBackend()
 
     with pytest.raises(ArchiveReadError):
-        backend.list(
-            Path("tests/data/missing.zip")
-        )
+        backend.list(Path("tests/data/missing.zip"))
+
 
 def test_missing_archive_extract_is_rejected(
     tmp_path,
@@ -132,6 +127,7 @@ def test_missing_archive_extract_is_rejected(
             tmp_path,
         )
 
+
 def test_backend_unavailable():
     backend = SevenZipBackend()
 
@@ -140,18 +136,16 @@ def test_backend_unavailable():
     with pytest.raises(BackendUnavailableError):
         _ = backend.binary
 
+
 def test_unsupported_archive_integrity_is_rejected():
     backend = SevenZipBackend()
 
     with pytest.raises(UnsupportedArchiveError):
-        backend.test(
-            Path("tests/data/photo.jpg")
-        )
+        backend.test(Path("tests/data/photo.jpg"))
+
 
 def test_missing_archive_integrity_is_rejected():
     backend = SevenZipBackend()
 
     with pytest.raises(ArchiveReadError):
-        backend.test(
-            Path("tests/data/missing.zip")
-        )
+        backend.test(Path("tests/data/missing.zip"))

@@ -1,19 +1,17 @@
 from pathlib import Path
 
 from src.backends.sevenzip import SevenZipBackend
-from src.services.extraction_service import ExtractionService
 from src.models.archive import (
     ExtractDecision,
     ExtractionStatus,
 )
 from src.models.errors import ExtractionError
+from src.services.extraction_service import ExtractionService
 
 
 def test_extract_loose_files(tmp_path):
 
-    archive = Path(
-        "tests/data/loose_files.zip"
-    )
+    archive = Path("tests/data/loose_files.zip")
 
     service = ExtractionService()
 
@@ -25,15 +23,11 @@ def test_extract_loose_files(tmp_path):
 
     assert result.status.value == "success"
 
-    assert (
-        result.output /
-        "file1.txt"
-    ).exists()
+    assert (result.output / "file1.txt").exists()
+
 
 def test_corrupt_archive_is_rejected(tmp_path):
-    archive = Path(
-        "tests/data/corrupt.zip"
-    )
+    archive = Path("tests/data/corrupt.zip")
 
     service = ExtractionService()
 
@@ -46,10 +40,9 @@ def test_corrupt_archive_is_rejected(tmp_path):
     assert result.status == ExtractionStatus.FAILED
     assert result.error == "Archive integrity check failed."
 
+
 def test_password_protected_archive_is_rejected(tmp_path):
-    archive = Path(
-        "tests/data/password.zip"
-    )
+    archive = Path("tests/data/password.zip")
 
     service = ExtractionService()
 
@@ -62,10 +55,9 @@ def test_password_protected_archive_is_rejected(tmp_path):
     assert result.status == ExtractionStatus.FAILED
     assert result.error == "Archive password required"
 
+
 def test_unsupported_archive_is_rejected(tmp_path):
-    archive = Path(
-        "tests/data/photo.jpg"
-    )
+    archive = Path("tests/data/photo.jpg")
 
     service = ExtractionService()
 
@@ -76,14 +68,11 @@ def test_unsupported_archive_is_rejected(tmp_path):
     )
 
     assert result.status == ExtractionStatus.FAILED
-    assert result.error == (
-        "Unsupported archive format: photo.jpg"
-    )
+    assert result.error == ("Unsupported archive format: photo.jpg")
+
 
 def test_missing_archive_is_rejected(tmp_path):
-    archive = Path(
-        "tests/data/missing.zip"
-    )
+    archive = Path("tests/data/missing.zip")
 
     service = ExtractionService()
 
@@ -94,21 +83,16 @@ def test_missing_archive_is_rejected(tmp_path):
     )
 
     assert result.status == ExtractionStatus.FAILED
-    assert result.error == (
-        "Archive not found: tests/data/missing.zip"
-    )
+    assert result.error == ("Archive not found: tests/data/missing.zip")
+
 
 def test_backend_unavailable_is_rejected(tmp_path):
-    archive = Path(
-        "tests/data/loose_files.zip"
-    )
+    archive = Path("tests/data/loose_files.zip")
 
     backend = SevenZipBackend()
     backend._binary = None
 
-    service = ExtractionService(
-        backend
-    )
+    service = ExtractionService(backend)
 
     result = service.extract(
         archive,
@@ -117,14 +101,11 @@ def test_backend_unavailable_is_rejected(tmp_path):
     )
 
     assert result.status == ExtractionStatus.FAILED
-    assert result.error == (
-        "7-Zip executable not found."
-    )
+    assert result.error == ("7-Zip executable not found.")
+
 
 def test_extract_creates_archive_folder(tmp_path):
-    archive = Path(
-        "tests/data/loose_files.zip"
-    )
+    archive = Path("tests/data/loose_files.zip")
 
     service = ExtractionService()
 
@@ -142,19 +123,16 @@ def test_extract_creates_archive_folder(tmp_path):
     assert (expected / "file1.txt").is_file()
     assert (expected / "file2.txt").is_file()
 
+
 def test_extraction_error_is_rejected(tmp_path):
     class FailingBackend:
         def test(self, archive):
             return True
 
         def extract(self, archive, destination):
-            raise ExtractionError(
-                "Extraction failed"
-            )
+            raise ExtractionError("Extraction failed")
 
-    service = ExtractionService(
-        FailingBackend()
-    )
+    service = ExtractionService(FailingBackend())
 
     result = service.extract(
         Path("tests/data/loose_files.zip"),
@@ -165,6 +143,7 @@ def test_extraction_error_is_rejected(tmp_path):
     assert result.status == ExtractionStatus.FAILED
     assert result.error == "Extraction failed"
 
+
 def test_integrity_failure_is_rejected_without_extraction(
     tmp_path,
 ):
@@ -173,13 +152,9 @@ def test_integrity_failure_is_rejected_without_extraction(
             return False
 
         def extract(self, archive, destination):
-            raise AssertionError(
-                "extract() should not be called"
-            )
+            raise AssertionError("extract() should not be called")
 
-    service = ExtractionService(
-        InvalidBackend()
-    )
+    service = ExtractionService(InvalidBackend())
 
     result = service.extract(
         Path("tests/data/loose_files.zip"),
@@ -188,6 +163,4 @@ def test_integrity_failure_is_rejected_without_extraction(
     )
 
     assert result.status == ExtractionStatus.FAILED
-    assert result.error == (
-        "Archive integrity check failed."
-    )
+    assert result.error == ("Archive integrity check failed.")

@@ -5,8 +5,9 @@ Archive data models.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
+
 
 class ExtractDecision(Enum):
     """Smart extraction decision."""
@@ -14,11 +15,13 @@ class ExtractDecision(Enum):
     EXTRACT_HERE = "extract_here"
     CREATE_FOLDER = "create_folder"
 
+
 class ExtractionStatus(Enum):
     """Extraction result state."""
 
     SUCCESS = "success"
     FAILED = "failed"
+
 
 @dataclass(frozen=True)
 class ArchiveEntry:
@@ -27,12 +30,14 @@ class ArchiveEntry:
     name: str
     is_directory: bool
 
+
 @dataclass(frozen=True)
 class ArchiveInfo:
     """Information about an archive."""
 
     path: Path
     entries: list[ArchiveEntry]
+
 
 @dataclass(frozen=True)
 class ExtractionResult:

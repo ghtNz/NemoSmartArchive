@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
-from .base import ArchiveBackend
 from src.models.archive import ArchiveEntry, ArchiveInfo
 from src.models.errors import (
     ArchiveReadError,
@@ -13,6 +12,9 @@ from src.models.errors import (
     PasswordRequiredError,
     UnsupportedArchiveError,
 )
+
+from .base import ArchiveBackend
+
 
 class SevenZipBackend(ArchiveBackend):
     """7-Zip backend."""
@@ -31,9 +33,7 @@ class SevenZipBackend(ArchiveBackend):
     def is_supported(cls, archive: Path) -> bool:
         """Return True when the filename uses a supported archive format."""
 
-        return archive.name.lower().endswith(
-            cls.SUPPORTED_EXTENSIONS
-        )
+        return archive.name.lower().endswith(cls.SUPPORTED_EXTENSIONS)
 
     def __init__(self) -> None:
         self._binary = shutil.which("7zz") or shutil.which("7z")
@@ -66,14 +66,10 @@ class SevenZipBackend(ArchiveBackend):
         """List archive contents."""
 
         if not self.is_supported(archive):
-            raise UnsupportedArchiveError(
-                f"Unsupported archive format: {archive.name}"
-            )
+            raise UnsupportedArchiveError(f"Unsupported archive format: {archive.name}")
 
         if not archive.is_file():
-            raise ArchiveReadError(
-                f"Archive not found: {archive}"
-            )
+            raise ArchiveReadError(f"Archive not found: {archive}")
 
         try:
             result = subprocess.run(
@@ -89,10 +85,7 @@ class SevenZipBackend(ArchiveBackend):
             )
 
         except subprocess.CalledProcessError as error:
-            output = (
-                error.stderr.strip()
-                or error.stdout.strip()
-            )
+            output = error.stderr.strip() or error.stdout.strip()
 
             message = "Unable to read archive."
 
@@ -102,7 +95,7 @@ class SevenZipBackend(ArchiveBackend):
                 line = line.strip()
 
                 if line == "ERRORS:":
-                    for next_line in lines[index + 1:]:
+                    for next_line in lines[index + 1 :]:
                         next_line = next_line.strip()
 
                         if next_line:
@@ -111,13 +104,9 @@ class SevenZipBackend(ArchiveBackend):
 
                     break
 
-            raise ArchiveReadError(
-                message
-            ) from error
+            raise ArchiveReadError(message) from error
 
-        entries = self._parse_listing(
-            result.stdout
-        )
+        entries = self._parse_listing(result.stdout)
 
         return ArchiveInfo(
             path=archive,
@@ -136,16 +125,11 @@ class SevenZipBackend(ArchiveBackend):
         is_folder = False
 
         for line in output.splitlines():
-
             if line.startswith("Path = "):
                 current_path = line.removeprefix("Path = ")
 
             elif line.startswith("Folder = "):
-
-                is_folder = (
-                    line.removeprefix("Folder = ")
-                    == "+"
-                )
+                is_folder = line.removeprefix("Folder = ") == "+"
 
                 if current_path:
                     entries.append(
@@ -167,14 +151,10 @@ class SevenZipBackend(ArchiveBackend):
         """Extract archive to destination."""
 
         if not self.is_supported(archive):
-            raise UnsupportedArchiveError(
-                f"Unsupported archive format: {archive.name}"
-            )
+            raise UnsupportedArchiveError(f"Unsupported archive format: {archive.name}")
 
         if not archive.is_file():
-            raise ArchiveReadError(
-                f"Archive not found: {archive}"
-            )
+            raise ArchiveReadError(f"Archive not found: {archive}")
 
         destination.mkdir(
             parents=True,
@@ -182,7 +162,7 @@ class SevenZipBackend(ArchiveBackend):
         )
 
         try:
-            result = subprocess.run(
+            subprocess.run(
                 [
                     self.binary,
                     "x",
@@ -196,41 +176,27 @@ class SevenZipBackend(ArchiveBackend):
             )
 
         except subprocess.CalledProcessError as error:
+            message = (error.stdout + error.stderr).lower()
 
-            message = (
-                error.stdout +
-                error.stderr
-            ).lower()
-
-            if (
-                "password" in message
-                or "encrypted" in message
-            ):
+            if "password" in message or "encrypted" in message:
                 from src.models.errors import (
                     PasswordRequiredError,
                 )
 
-                raise PasswordRequiredError(
-                    "Archive password required"
-                ) from error
+                raise PasswordRequiredError("Archive password required") from error
 
             raise ExtractionError(
-                error.stderr.strip()
-                or "Unknown extraction error"
+                error.stderr.strip() or "Unknown extraction error"
             ) from error
 
     def test(self, archive: Path) -> bool:
         """Test archive integrity using 7-Zip."""
 
         if not self.is_supported(archive):
-            raise UnsupportedArchiveError(
-                f"Unsupported archive format: {archive.name}"
-            )
+            raise UnsupportedArchiveError(f"Unsupported archive format: {archive.name}")
 
         if not archive.is_file():
-            raise ArchiveReadError(
-                f"Archive not found: {archive}"
-            )
+            raise ArchiveReadError(f"Archive not found: {archive}")
 
         result = subprocess.run(
             [
@@ -247,17 +213,9 @@ class SevenZipBackend(ArchiveBackend):
         if result.returncode == 0:
             return True
 
-        message = (
-            result.stderr.strip()
-            or result.stdout.strip()
-        ).lower()
+        message = (result.stderr.strip() or result.stdout.strip()).lower()
 
-        if (
-            "password" in message
-            or "encrypted" in message
-        ):
-            raise PasswordRequiredError(
-                "Archive password required"
-            )
+        if "password" in message or "encrypted" in message:
+            raise PasswordRequiredError("Archive password required")
 
         return False

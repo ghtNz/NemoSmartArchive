@@ -10,6 +10,7 @@ from src.models.archive import (
     ExtractDecision,
 )
 
+
 class ArchiveEngine:
     """Analyze archive structure."""
 
@@ -21,9 +22,7 @@ class ArchiveEngine:
         Decide extraction behavior.
         """
 
-        top_level = self._top_level_items(
-            archive
-        )
+        top_level = self._top_level_items(archive)
 
         if len(top_level) == 1:
             item = top_level[0]
@@ -44,7 +43,6 @@ class ArchiveEngine:
         result = {}
 
         for entry in archive.entries:
-
             parts = entry.name.split("/")
 
             if len(parts) == 1:

@@ -12,9 +12,9 @@ from src.models.archive import (
     ExtractionResult,
     ExtractionStatus,
 )
-
 from src.models.errors import ExtractionError
 from src.ui.notify import notify
+
 
 class ExtractionService:
     """Handle archive extraction workflow."""
@@ -42,7 +42,6 @@ class ExtractionService:
             output = destination
 
         try:
-            
             if not self.backend.test(archive):
                 message = "Archive integrity check failed."
 
@@ -73,12 +72,11 @@ class ExtractionService:
             )
 
         except ExtractionError as error:
-
             notify(
                 "NemoSmartArchive",
                 str(error),
             )
-            
+
             return ExtractionResult(
                 status=ExtractionStatus.FAILED,
                 output=output,
