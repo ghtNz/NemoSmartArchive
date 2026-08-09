@@ -5,6 +5,7 @@ Abstract interface for archive backends.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from src.models.archive import ArchiveInfo
 from pathlib import Path
 
 
@@ -20,7 +21,7 @@ class ArchiveBackend(ABC):
         """Return backend version."""
 
     @abstractmethod
-    def list(self, archive: Path):
+    def list(self, archive: Path) -> ArchiveInfo:
         """Return archive contents."""
 
     @abstractmethod
