@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from src.backends.base import ArchiveBackend
 from src.backends.sevenzip import SevenZipBackend
 from src.models.archive import (
     ExtractDecision,
@@ -21,7 +22,7 @@ class ExtractionService:
 
     def __init__(
         self,
-        backend: SevenZipBackend | None = None,
+        backend: ArchiveBackend | None = None,
     ):
         self.backend = backend or SevenZipBackend()
 

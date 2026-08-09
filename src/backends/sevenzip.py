@@ -179,10 +179,6 @@ class SevenZipBackend(ArchiveBackend):
             message = (error.stdout + error.stderr).lower()
 
             if "password" in message or "encrypted" in message:
-                from src.models.errors import (
-                    PasswordRequiredError,
-                )
-
                 raise PasswordRequiredError("Archive password required") from error
 
             raise ExtractionError(
