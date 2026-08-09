@@ -60,3 +60,62 @@ def test_password_protected_archive_is_rejected(tmp_path):
 
     assert result.status == ExtractionStatus.FAILED
     assert result.error == "Archive password required"
+
+def test_unsupported_archive_is_rejected(tmp_path):
+    archive = Path(
+        "tests/data/photo.jpg"
+    )
+
+    service = ExtractionService()
+
+    result = service.extract(
+        archive,
+        tmp_path,
+        ExtractDecision.EXTRACT_HERE,
+    )
+
+    assert result.status == ExtractionStatus.FAILED
+    assert result.error == (
+        "Unsupported archive format: photo.jpg"
+    )
+
+def test_missing_archive_is_rejected(tmp_path):
+    archive = Path(
+        "tests/data/missing.zip"
+    )
+
+    service = ExtractionService()
+
+    result = service.extract(
+        archive,
+        tmp_path,
+        ExtractDecision.EXTRACT_HERE,
+    )
+
+    assert result.status == ExtractionStatus.FAILED
+    assert result.error == (
+        "Archive not found: tests/data/missing.zip"
+    )
+
+def test_backend_unavailable_is_rejected(tmp_path):
+    archive = Path(
+        "tests/data/loose_files.zip"
+    )
+
+    backend = SevenZipBackend()
+    backend._binary = None
+
+    service = ExtractionService(
+        backend
+    )
+
+    result = service.extract(
+        archive,
+        tmp_path,
+        ExtractDecision.EXTRACT_HERE,
+    )
+
+    assert result.status == ExtractionStatus.FAILED
+    assert result.error == (
+        "7-Zip executable not found."
+    )

@@ -2,7 +2,13 @@ import pytest
 
 from pathlib import Path
 from src.backends.sevenzip import SevenZipBackend
-from src.models.errors import PasswordRequiredError
+from src.models.errors import (
+    ArchiveReadError,
+    ExtractionError,
+    PasswordRequiredError,
+    UnsupportedArchiveError,
+    BackendUnavailableError,
+)
 
 
 def test_backend_exists():
@@ -86,4 +92,66 @@ def test_password_protected_archive():
         backend.extract(
             Path("tests/data/password.zip"),
             Path("/tmp/nemosmartarchive-password-test"),
+        )
+
+def test_unsupported_archive_is_rejected():
+    backend = SevenZipBackend()
+
+    with pytest.raises(UnsupportedArchiveError):
+        backend.list(
+            Path("tests/data/photo.jpg")
+        )
+
+def test_unsupported_archive_extract_is_rejected(
+    tmp_path,
+):
+    backend = SevenZipBackend()
+
+    with pytest.raises(UnsupportedArchiveError):
+        backend.extract(
+            Path("tests/data/photo.jpg"),
+            tmp_path,
+        )
+
+def test_missing_archive_is_rejected():
+    backend = SevenZipBackend()
+
+    with pytest.raises(ArchiveReadError):
+        backend.list(
+            Path("tests/data/missing.zip")
+        )
+
+def test_missing_archive_extract_is_rejected(
+    tmp_path,
+):
+    backend = SevenZipBackend()
+
+    with pytest.raises(ArchiveReadError):
+        backend.extract(
+            Path("tests/data/missing.zip"),
+            tmp_path,
+        )
+
+def test_backend_unavailable():
+    backend = SevenZipBackend()
+
+    backend._binary = None
+
+    with pytest.raises(BackendUnavailableError):
+        _ = backend.binary
+
+def test_unsupported_archive_integrity_is_rejected():
+    backend = SevenZipBackend()
+
+    with pytest.raises(UnsupportedArchiveError):
+        backend.test(
+            Path("tests/data/photo.jpg")
+        )
+
+def test_missing_archive_integrity_is_rejected():
+    backend = SevenZipBackend()
+
+    with pytest.raises(ArchiveReadError):
+        backend.test(
+            Path("tests/data/missing.zip")
         )

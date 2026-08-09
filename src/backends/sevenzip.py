@@ -8,8 +8,10 @@ from .base import ArchiveBackend
 from src.models.archive import ArchiveEntry, ArchiveInfo
 from src.models.errors import (
     ArchiveReadError,
+    BackendUnavailableError,
     ExtractionError,
     PasswordRequiredError,
+    UnsupportedArchiveError,
 )
 
 class SevenZipBackend(ArchiveBackend):
@@ -39,7 +41,7 @@ class SevenZipBackend(ArchiveBackend):
     @property
     def binary(self) -> str:
         if self._binary is None:
-            raise RuntimeError("7-Zip executable not found.")
+            raise BackendUnavailableError("7-Zip executable not found.")
 
         return self._binary
 
@@ -62,6 +64,16 @@ class SevenZipBackend(ArchiveBackend):
 
     def list(self, archive: Path) -> ArchiveInfo:
         """List archive contents."""
+
+        if not self.is_supported(archive):
+            raise UnsupportedArchiveError(
+                f"Unsupported archive format: {archive.name}"
+            )
+
+        if not archive.is_file():
+            raise ArchiveReadError(
+                f"Archive not found: {archive}"
+            )
 
         try:
             result = subprocess.run(
@@ -154,6 +166,16 @@ class SevenZipBackend(ArchiveBackend):
     ) -> None:
         """Extract archive to destination."""
 
+        if not self.is_supported(archive):
+            raise UnsupportedArchiveError(
+                f"Unsupported archive format: {archive.name}"
+            )
+
+        if not archive.is_file():
+            raise ArchiveReadError(
+                f"Archive not found: {archive}"
+            )
+
         destination.mkdir(
             parents=True,
             exist_ok=True,
@@ -199,6 +221,16 @@ class SevenZipBackend(ArchiveBackend):
 
     def test(self, archive: Path) -> bool:
         """Test archive integrity using 7-Zip."""
+
+        if not self.is_supported(archive):
+            raise UnsupportedArchiveError(
+                f"Unsupported archive format: {archive.name}"
+            )
+
+        if not archive.is_file():
+            raise ArchiveReadError(
+                f"Archive not found: {archive}"
+            )
 
         result = subprocess.run(
             [
