@@ -55,9 +55,7 @@ class ArchiveEngine:
             else:
                 name = parts[0]
 
-                result[name] = type(
-                    entry
-                )(
+                result[name] = ArchiveEntry(
                     name=name + "/",
                     is_directory=True,
                 )
