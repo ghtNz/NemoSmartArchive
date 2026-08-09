@@ -11,16 +11,23 @@ from src.models.archive import (
     ExtractionResult,
     ExtractionStatus,
 )
-from src.models.errors import ArchiveReadError
+from src.models.errors import ExtractionError
 from src.ui.notify import notify
 
 
 def extract_smart(
     file_path: Path,
+    destination: Path | None = None,
 ):
     """
     Smart extraction entry point.
     """
+
+    destination = (
+        destination
+        if destination is not None
+        else file_path.parent
+    )
 
     backend = SevenZipBackend()
 
@@ -29,7 +36,23 @@ def extract_smart(
             file_path
         )
 
-    except ArchiveReadError as error:
+        engine = ArchiveEngine()
+
+        decision = engine.analyze(
+            archive_info
+        )
+
+        service = ExtractionService(
+            backend
+        )
+
+        return service.extract(
+            file_path,
+            destination,
+            decision,
+        )
+
+    except ExtractionError as error:
         message = str(error)
 
         notify(
@@ -39,22 +62,6 @@ def extract_smart(
 
         return ExtractionResult(
             status=ExtractionStatus.FAILED,
-            output=file_path.parent,
+            output=destination,
             error=message,
         )
-
-    engine = ArchiveEngine()
-
-    decision = engine.analyze(
-        archive_info
-    )
-
-    service = ExtractionService(
-        backend
-    )
-
-    return service.extract(
-        file_path,
-        file_path.parent,
-        decision,
-    )

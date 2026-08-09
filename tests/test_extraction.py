@@ -119,3 +119,24 @@ def test_backend_unavailable_is_rejected(tmp_path):
     assert result.error == (
         "7-Zip executable not found."
     )
+
+def test_extract_creates_archive_folder(tmp_path):
+    archive = Path(
+        "tests/data/loose_files.zip"
+    )
+
+    service = ExtractionService()
+
+    result = service.extract(
+        archive,
+        tmp_path,
+        ExtractDecision.CREATE_FOLDER,
+    )
+
+    expected = tmp_path / "loose_files"
+
+    assert result.status == ExtractionStatus.SUCCESS
+    assert result.output == expected
+    assert expected.is_dir()
+    assert (expected / "file1.txt").is_file()
+    assert (expected / "file2.txt").is_file()
