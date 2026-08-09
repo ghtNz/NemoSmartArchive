@@ -5,6 +5,7 @@ Smart archive decision engine.
 from __future__ import annotations
 
 from src.models.archive import (
+    ArchiveEntry,
     ArchiveInfo,
     ExtractDecision,
 )
@@ -35,7 +36,7 @@ class ArchiveEngine:
     def _top_level_items(
         self,
         archive: ArchiveInfo,
-    ):
+    ) -> list[ArchiveEntry]:
         """
         Return unique top-level entries.
         """
