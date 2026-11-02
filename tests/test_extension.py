@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.extension import extract_smart
+from src.extension import extract_smart, is_supported_archive
 from src.models.archive import ExtractionStatus
 
 
@@ -75,3 +75,27 @@ def test_extract_smart_missing_archive(tmp_path):
     assert result.status == (ExtractionStatus.FAILED)
 
     assert result.error == ("Archive not found: tests/data/missing.zip")
+
+
+def test_supported_archive_formats():
+    supported = (
+        "archive.zip",
+        "archive.7z",
+        "archive.tar",
+        "archive.rar",
+        "archive.RAR",
+    )
+
+    for filename in supported:
+        assert is_supported_archive(Path(filename))
+
+
+def test_unsupported_archive_formats():
+    unsupported = (
+        "photo.jpg",
+        "document.pdf",
+        "video.mp4",
+    )
+
+    for filename in unsupported:
+        assert not is_supported_archive(Path(filename))

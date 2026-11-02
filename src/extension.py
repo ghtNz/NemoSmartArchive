@@ -16,6 +16,13 @@ from src.services.extraction_service import ExtractionService
 from src.ui.notify import notify
 
 
+def is_supported_archive(file_path: Path) -> bool:
+    """Return whether the file is supported by an archive backend."""
+    return SevenZipBackend.is_supported(file_path) or UnrarBackend.is_supported(
+        file_path
+    )
+
+
 def extract_smart(
     file_path: Path,
     destination: Path | None = None,

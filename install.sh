@@ -30,9 +30,7 @@ sys.path.insert(
     "$PROJECT_DIR"
 )
 
-from src.extension import extract_smart
-from src.backends.sevenzip import SevenZipBackend
-from src.backends.unrar import UnrarBackend
+from src.extension import extract_smart, is_supported_archive
 
 
 class NemoSmartArchiveExtension(
@@ -52,32 +50,23 @@ class NemoSmartArchiveExtension(
         if not files:
             return
 
-        if len(files) != 1:
-            return
+        for file in files:
+            if file.is_directory():
+                return
 
-        file = files[0]
+            location = file.get_location()
+            file_path = location.get_path()
 
-        if file.is_directory():
-            return
+            if not file_path:
+                return
 
-        location = file.get_location()
-        file_path = location.get_path()
-
-        if not file_path:
-            return
-
-        path = Path(file_path)
-
-        if not (
-            SevenZipBackend.is_supported(path)
-            or UnrarBackend.is_supported(path)
-        ):
-            return
+            if not is_supported_archive(Path(file_path)):
+                return
 
         menu_item = Nemo.MenuItem(
             name="NemoSmartArchive::SmartExtract",
             label="Extract Here (Smart)",
-            tip="Smart extract archive",
+            tip="Smart extract selected archive",
         )
 
         menu_item.connect(
