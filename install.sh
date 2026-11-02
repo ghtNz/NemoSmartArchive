@@ -32,6 +32,7 @@ sys.path.insert(
 
 from src.extension import extract_smart
 from src.backends.sevenzip import SevenZipBackend
+from src.backends.unrar import UnrarBackend
 
 
 class NemoSmartArchiveExtension(
@@ -67,7 +68,10 @@ class NemoSmartArchiveExtension(
 
         path = Path(file_path)
 
-        if not SevenZipBackend.is_supported(path):
+        if not (
+            SevenZipBackend.is_supported(path)
+            or UnrarBackend.is_supported(path)
+        ):
             return
 
         menu_item = Nemo.MenuItem(

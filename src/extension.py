@@ -5,6 +5,7 @@ NemoSmartArchive application bridge.
 from pathlib import Path
 
 from src.backends.sevenzip import SevenZipBackend
+from src.backends.unrar import UnrarBackend
 from src.engine.archive_engine import ArchiveEngine
 from src.models.archive import (
     ExtractionResult,
@@ -25,7 +26,10 @@ def extract_smart(
 
     destination = destination if destination is not None else file_path.parent
 
-    backend = SevenZipBackend()
+    if UnrarBackend.is_supported(file_path):
+        backend = UnrarBackend()
+    else:
+        backend = SevenZipBackend()
 
     try:
         archive_info = backend.list(file_path)
