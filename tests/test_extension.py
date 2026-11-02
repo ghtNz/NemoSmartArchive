@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from src.extension import extract_smart, is_supported_archive
+from src.extension import (
+    extract_many_smart,
+    extract_smart,
+    is_supported_archive,
+)
 from src.models.archive import ExtractionStatus
 
 
@@ -99,3 +103,88 @@ def test_unsupported_archive_formats():
 
     for filename in unsupported:
         assert not is_supported_archive(Path(filename))
+
+
+def test_extract_many_smart_success(tmp_path, monkeypatch):
+    from src import extension
+
+    notifications = []
+
+    monkeypatch.setattr(
+        extension,
+        "notify",
+        lambda title, message: notifications.append((title, message)),
+    )
+
+    archives = [
+        Path("tests/data/loose_files.zip"),
+        Path("tests/data/loose_files.zip"),
+    ]
+
+    results = extract_many_smart(archives, tmp_path)
+
+    assert len(results) == 2
+    assert all(result.status == ExtractionStatus.SUCCESS for result in results)
+
+    assert len(notifications) == 1
+
+    assert "2 archives processed" in notifications[0][1]
+    assert "2 successful" in notifications[0][1]
+    assert "0 failed" in notifications[0][1]
+
+
+def test_extract_many_smart_with_failure(tmp_path, monkeypatch):
+    from src import extension
+
+    notifications = []
+
+    monkeypatch.setattr(
+        extension,
+        "notify",
+        lambda title, message: notifications.append((title, message)),
+    )
+
+    archives = [
+        Path("tests/data/loose_files.zip"),
+        Path("tests/data/corrupt.zip"),
+    ]
+
+    results = extract_many_smart(archives, tmp_path)
+
+    assert results[0].status == ExtractionStatus.SUCCESS
+    assert results[1].status == ExtractionStatus.FAILED
+
+    assert len(notifications) == 1
+
+    summary = notifications[0][1]
+
+    assert "2 archives processed" in summary
+    assert "1 successful" in summary
+    assert "1 failed" in summary
+    assert "corrupt.zip" in summary
+
+
+def test_extract_many_smart_suppresses_individual_notifications(
+    tmp_path,
+    monkeypatch,
+):
+    from src import extension
+
+    notifications = []
+
+    monkeypatch.setattr(
+        extension,
+        "notify",
+        lambda title, message: notifications.append((title, message)),
+    )
+
+    extract_many_smart(
+        [
+            Path("tests/data/loose_files.zip"),
+            Path("tests/data/loose_files.zip"),
+        ],
+        tmp_path,
+    )
+
+    assert len(notifications) == 1
+    assert "archives processed" in notifications[0][1]

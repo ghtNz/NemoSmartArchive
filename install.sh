@@ -30,7 +30,11 @@ sys.path.insert(
     "$PROJECT_DIR"
 )
 
-from src.extension import extract_smart, is_supported_archive
+from src.extension import (
+    extract_many_smart,
+    extract_smart,
+    is_supported_archive,
+)
 
 
 class NemoSmartArchiveExtension(
@@ -82,25 +86,29 @@ class NemoSmartArchiveExtension(
         menu_item,
         files,
     ):
+        paths = []
 
         for file in files:
-
             location = file.get_location()
             file_path = location.get_path()
 
-            if not file_path:
-                continue
+            if file_path:
+                paths.append(Path(file_path))
 
-            path = Path(file_path)
+        if not paths:
+            return
 
-            try:
-                extract_smart(path)
+        try:
+            if len(paths) == 1:
+                extract_smart(paths[0])
+            else:
+                extract_many_smart(paths)
 
-            except Exception as error:
-                print(
-                    "NemoSmartArchive error:",
-                    error,
-                )
+        except Exception as error:
+            print(
+                "NemoSmartArchive error:",
+                error,
+            )
 EOF
 
 chmod 644 "$EXTENSION_FILE"

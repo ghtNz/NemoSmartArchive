@@ -31,14 +31,12 @@ class ExtractionService:
         archive: Path,
         destination: Path,
         decision: ExtractDecision,
+        notify_result: bool = True,
     ) -> ExtractionResult:
-        """
-        Extract archive according to decision.
-        """
+        """Extract archive according to decision."""
 
         if decision == ExtractDecision.CREATE_FOLDER:
             output = destination / archive.stem
-
         else:
             output = destination
 
@@ -46,10 +44,8 @@ class ExtractionService:
             if not self.backend.test(archive):
                 message = "Archive integrity check failed."
 
-                notify(
-                    "NemoSmartArchive",
-                    message,
-                )
+                if notify_result:
+                    notify("NemoSmartArchive", message)
 
                 return ExtractionResult(
                     status=ExtractionStatus.FAILED,
@@ -57,15 +53,13 @@ class ExtractionService:
                     error=message,
                 )
 
-            self.backend.extract(
-                archive,
-                output,
-            )
+            self.backend.extract(archive, output)
 
-            notify(
-                "NemoSmartArchive",
-                f"Extraction completed:\n{output}",
-            )
+            if notify_result:
+                notify(
+                    "NemoSmartArchive",
+                    f"Extraction completed:\n{output}",
+                )
 
             return ExtractionResult(
                 status=ExtractionStatus.SUCCESS,
@@ -73,10 +67,8 @@ class ExtractionService:
             )
 
         except ExtractionError as error:
-            notify(
-                "NemoSmartArchive",
-                str(error),
-            )
+            if notify_result:
+                notify("NemoSmartArchive", str(error))
 
             return ExtractionResult(
                 status=ExtractionStatus.FAILED,
